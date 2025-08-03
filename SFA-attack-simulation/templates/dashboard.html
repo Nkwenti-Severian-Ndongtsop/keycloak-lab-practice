@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Vulnerable Auth System{% endblock %}
+
+{% block content %}
+<h1>Welcome, {{ user }}!</h1>
+
+<div class="vulnerability-info">
+    <strong>🔍 SESSION INFO:</strong> Your current session ID is vulnerable to fixation attacks.
+    <br>Session ID: <code>{{ session.get('_id', 'Not available') }}</code>
+</div>
+
+<div style="background: #d1ecf1; border: 1px solid #bee5eb; color: #0c5460; padding: 15px; border-radius: 5px; margin: 20px 0;">
+    <h3>Your Account Details:</h3>
+    <p><strong>Username:</strong> {{ user }}</p>
+    <p><strong>Role:</strong> {{ role }}</p>
+    <p><strong>Session ID:</strong> <code>{{ session.get('_id', 'Not available') }}</code></p>
+</div>
+
+<div style="margin-top: 20px;">
+    <h3>Available Actions:</h3>
+    <ul>
+        <li><a href="{{ url_for('profile') }}">View Profile</a></li>
+        {% if role == 'admin' %}
+            <li><a href="{{ url_for('admin') }}">Access Admin Panel</a></li>
+        {% endif %}
+        <li><a href="{{ url_for('logout') }}">Logout</a></li>
+    </ul>
+</div>
+{% endblock %} 
