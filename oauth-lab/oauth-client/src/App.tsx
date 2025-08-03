@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { config, buildApiUrl } from './config'
 import './App.css'
 
 interface User {
@@ -21,9 +22,14 @@ interface RegisterForm {
 }
 
 function App() {
+  // Check for OAuth callback immediately to prevent flash
+  const urlParams = new URLSearchParams(window.location.search);
+  const hasOAuthCallback = urlParams.get('code') || urlParams.get('error');
+  
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
   const [isLoading, setIsLoading] = useState(false);
+  const [isOAuthProcessing, setIsOAuthProcessing] = useState(!!hasOAuthCallback);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
@@ -39,35 +45,37 @@ function App() {
     confirmPassword: ''
   });
 
-  // Check if user is already logged in
-  useEffect(() => {
-    const savedUser = localStorage.getItem('currentUser');
-    if (savedUser) {
-      setCurrentUser(JSON.parse(savedUser));
-    }
-  }, []);
-
-  // Handle OAuth callback
+  // Check for OAuth callback and user session on mount
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const code = urlParams.get('code');
     const error = urlParams.get('error');
     
-    // Clear URL parameters immediately to prevent code reuse
+    // Handle OAuth callback first (before checking saved user)
     if (code || error) {
+      // Clear URL parameters immediately to prevent code reuse
       window.history.replaceState({}, document.title, window.location.pathname);
+      
+      if (error) {
+        setError('OAuth error: ' + error);
+        return;
+      }
+      
+      if (code) {
+        // Set OAuth processing state immediately to prevent flash
+        setIsOAuthProcessing(true);
+        // Process the code
+        setTimeout(() => {
+          exchangeCodeForToken(code);
+        }, 100);
+        return; // Don't check saved user if processing OAuth
+      }
     }
     
-    if (error) {
-      setError('OAuth error: ' + error);
-      return;
-    }
-    
-    if (code) {
-      // Add a small delay to ensure URL is cleared before processing
-      setTimeout(() => {
-        exchangeCodeForToken(code);
-      }, 100);
+    // Only check saved user if not processing OAuth
+    const savedUser = localStorage.getItem('currentUser');
+    if (savedUser) {
+      setCurrentUser(JSON.parse(savedUser));
     }
   }, []);
 
@@ -77,7 +85,7 @@ function App() {
     setError('');
 
     try {
-      const response = await fetch('http://localhost:8081/api/users/login', {
+      const response = await fetch(buildApiUrl(config.ENDPOINTS.LOGIN), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -114,7 +122,7 @@ function App() {
     }
 
     try {
-      const response = await fetch('http://localhost:8081/api/users/register', {
+      const response = await fetch(buildApiUrl(config.ENDPOINTS.REGISTER), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -151,7 +159,7 @@ function App() {
     clearOAuthState();
 
     try {
-      const response = await fetch('http://localhost:8081/oauth/authorize');
+      const response = await fetch(buildApiUrl(config.ENDPOINTS.OAUTH_AUTHORIZE));
       const authUrl = await response.text();
       
       // Add a timestamp to ensure fresh authorization
@@ -170,7 +178,7 @@ function App() {
     setError('');
 
     try {
-      const response = await fetch(`http://localhost:8081/oauth/callback?code=${code}`, {
+      const response = await fetch(`${buildApiUrl(config.ENDPOINTS.OAUTH_CALLBACK)}?code=${code}`, {
         method: 'POST'
       });
 
@@ -189,6 +197,7 @@ function App() {
       setError('Error completing OAuth flow. Please try again.');
     } finally {
       setIsLoading(false);
+      setIsOAuthProcessing(false);
     }
   };
 
@@ -224,6 +233,37 @@ function App() {
       document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
     });
   };
+
+  // Show loading state during OAuth processing
+  if (isOAuthProcessing) {
+    return (
+      <div className="app">
+        <div className="container">
+          <div className="welcome-header">
+            <h1>🔄 Processing</h1>
+            <p>Completing your Keycloak authentication</p>
+          </div>
+          <div className="welcome-content">
+            <div className="welcome-message">
+              <h3>Authenticating with Keycloak</h3>
+              <p>Please wait while we verify your credentials and set up your session...</p>
+              <div style={{ marginTop: '20px', textAlign: 'center' }}>
+                <div style={{ 
+                  width: '40px', 
+                  height: '40px', 
+                  border: '4px solid #f3f3f3', 
+                  borderTop: '4px solid #4f46e5', 
+                  borderRadius: '50%', 
+                  animation: 'spin 1s linear infinite',
+                  margin: '0 auto'
+                }}></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (currentUser) {
   return (
