@@ -1,6 +1,19 @@
 import { useState, useEffect } from 'react'
-import { config, buildApiUrl } from './config'
 import './App.css'
+
+// Configuration - Update these values for your setup
+const API_BASE_URL = 'http://localhost:8081'
+const ENDPOINTS = {
+  LOGIN: '/api/users/login',
+  REGISTER: '/api/users/register',
+  OAUTH_AUTHORIZE: '/oauth/authorize',
+  OAUTH_CALLBACK: '/oauth/callback',
+  OAUTH_HEALTH: '/oauth/health'
+}
+
+const buildApiUrl = (endpoint: string): string => {
+  return `${API_BASE_URL}${endpoint}`
+}
 
 interface User {
   id: number;
@@ -85,7 +98,7 @@ function App() {
     setError('');
 
     try {
-      const response = await fetch(buildApiUrl(config.ENDPOINTS.LOGIN), {
+      const response = await fetch(buildApiUrl(ENDPOINTS.LOGIN), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -122,7 +135,7 @@ function App() {
     }
 
     try {
-      const response = await fetch(buildApiUrl(config.ENDPOINTS.REGISTER), {
+      const response = await fetch(buildApiUrl(ENDPOINTS.REGISTER), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -159,7 +172,7 @@ function App() {
     clearOAuthState();
 
     try {
-      const response = await fetch(buildApiUrl(config.ENDPOINTS.OAUTH_AUTHORIZE));
+      const response = await fetch(buildApiUrl(ENDPOINTS.OAUTH_AUTHORIZE));
       const authUrl = await response.text();
       
       // Add a timestamp to ensure fresh authorization
@@ -178,7 +191,7 @@ function App() {
     setError('');
 
     try {
-      const response = await fetch(`${buildApiUrl(config.ENDPOINTS.OAUTH_CALLBACK)}?code=${code}`, {
+      const response = await fetch(`${buildApiUrl(ENDPOINTS.OAUTH_CALLBACK)}?code=${code}`, {
         method: 'POST'
       });
 
