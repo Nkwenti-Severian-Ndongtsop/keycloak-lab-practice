@@ -1,288 +1,323 @@
-# OAuth Authorization Code Flow Demo
+# OAuth Lab - Spring Boot + React + Keycloak
 
-This project demonstrates a complete OAuth 2.0 Authorization Code flow with Keycloak, including both backend and frontend components.
+A complete OAuth 2.0 implementation with Spring Boot backend, React frontend, and Keycloak identity provider.
 
-## 🏗️ Project Structure
+## 🏗️ Architecture
 
 ```
-oauth-lab/
-├── oauth/                    # Spring Boot Backend
-│   ├── src/main/java/com/demo/oauth/
-│   │   ├── OauthBackendApplication.java
-│   │   ├── controller/
-│   │   │   ├── OAuthController.java
-│   │   │   └── UserController.java
-│   │   ├── model/
-│   │   │   ├── TokenResponse.java
-│   │   │   └── User.java
-│   │   ├── repository/
-│   │   │   └── UserRepository.java
-│   │   ├── service/
-│   │   │   └── UserService.java
-│   │   └── config/
-│   │       └── SecurityConfig.java
-│   ├── src/main/resources/
-│   │   └── application.yml
-│   ├── build.gradle
-│   └── docker-compose.yml
-└── oauth-client/            # React Frontend
-    ├── src/
-    │   ├── App.tsx
-    │   ├── App.css
-    │   └── main.tsx
-    └── package.json
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   React App     │    │  Spring Boot    │    │    Keycloak     │
+│  (localhost:5173)│◄──►│  (localhost:8081)│◄──►│ (10.216.68.222:7000)│
+│                 │    │                 │    │                 │
+│ - Login/Register│    │ - OAuth Handler │    │ - Identity      │
+│ - OAuth Flow    │    │ - User Mgmt     │    │ - User Store    │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+                              │
+                              ▼
+                       ┌─────────────────┐
+                       │   PostgreSQL    │
+                       │(10.216.68.222:5432)│
+                       │                 │
+                       │ - User Data     │
+                       │ - Keycloak Data │
+                       └─────────────────┘
 ```
 
-## 🌐 Network Architecture
+## 📋 Prerequisites
 
-This setup uses a **distributed architecture**:
-
-- **Frontend (React)**: Runs locally on your machine at `localhost:5173`
-- **Backend (Spring Boot)**: Runs locally on your machine at `localhost:8081`
-- **Keycloak**: Runs on multipass instance at `10.216.68.222:7000`
-- **Database (PostgreSQL)**: Runs on multipass instance at `10.216.68.222:5432`
+- **Java 21** (or Java 17+)
+- **Node.js 18+** and npm
+- **Docker** and Docker Compose
+- **Multipass VM** (for Keycloak and PostgreSQL)
 
 ## 🚀 Quick Start
 
-### 1. Start Keycloak on Multipass Instance
-```bash
-# SSH into your multipass instance
-ssh ubuntu@10.216.68.222
+### Step 1: Start Keycloak and PostgreSQL
 
-# Navigate to the oauth directory
-cd oauth-lab/oauth
+1. **SSH into your Multipass VM**:
+   ```bash
+   multipass shell your-vm-name
+   ```
 
-# Start Keycloak and PostgreSQL
-docker-compose up -d
-```
+2. **Navigate to the project directory**:
+   ```bash
+   cd /home/ubuntu/demo-data
+   ```
 
-### 2. Start Spring Boot Backend (Local Machine)
-```bash
-# On your local machine
-cd oauth-lab/oauth
-./gradlew bootRun
-```
-Backend will be available at: http://localhost:8081
+3. **Start the services**:
+   ```bash
+   docker-compose up -d
+   ```
 
-### 3. Start React Frontend (Local Machine)
-```bash
-# On your local machine
-cd oauth-lab/oauth-client
-npm install
-npm run dev
-```
-Frontend will be available at: http://localhost:5173
+4. **Verify services are running**:
+   ```bash
+   docker ps
+   ```
+   You should see Keycloak and PostgreSQL containers running.
 
-## 🔧 Configuration
+### Step 2: Configure Keycloak
 
-### Keycloak Setup (Multipass Instance)
-1. Access Keycloak admin console: http://10.216.68.222:7000
-2. Login with: `nkwenti` / `password`
-3. Create a realm called `oauth-demo`
-4. Create a client called `spring-client`
-5. Set redirect URI to: `http://localhost:5173/callback`
-6. Copy the client secret and update `application.yml`
+1. **Access Keycloak Admin Console**:
+   - Open: `http://10.216.68.222:7000/admin`
+   - Login with: `admin` / `admin123`
 
-### Backend Configuration
-The `oauth/src/main/resources/application.yml` is already configured:
-```yaml
-keycloak:
-  realm: oauth-demo
-  auth-server-url: http://10.216.68.222:7000/realms/oauth-demo
-  client-id: spring-client
-  client-secret: your-client-secret-here
-  redirect-uri: http://localhost:5173/callback
-```
+2. **Create Realm**:
+   - Click "Create Realm"
+   - Name: `oauth-demo`
+   - Click "Create"
 
-### Frontend Configuration
-The React app is configured to connect to:
-- Backend API: `http://localhost:8081`
-- OAuth endpoints: `http://localhost:8081/oauth/*`
+3. **Create Client**:
+   - Go to "Clients" → "Create"
+   - Client ID: `Spring-Client`
+   - Client Protocol: `openid-connect`
+   - Click "Save"
 
-## 🎯 Features
+4. **Configure Client Settings**:
+   - **Access Type**: `confidential`
+   - **Valid Redirect URIs**: `http://localhost:5173/callback`
+   - **Web Origins**: `http://localhost:5173`
+   - Click "Save"
 
-### Backend Features
-- **User Management**: JPA entities with H2 database
-- **Password Encryption**: BCrypt hashing
-- **OAuth Integration**: Token exchange with Keycloak
-- **REST APIs**: User registration, login, and OAuth endpoints
-- **Security**: CORS enabled, password encoding
+5. **Get Client Secret**:
+   - Go to "Credentials" tab
+   - Copy the client secret (e.g., `EdBAUx47IccjgWjtV8HxhrmKjq3s9bQ9`)
 
-### Frontend Features
-- **Modern UI**: Beautiful React login page
-- **Dual Authentication**: Local accounts + Keycloak OAuth
-- **Form Validation**: Real-time validation and error handling
-- **Responsive Design**: Works on all devices
-- **Session Management**: Persistent login state
+6. **Create User**:
+   - Go to "Users" → "Add User"
+   - Username: `testuser`
+   - Email: `test@example.com`
+   - First Name: `Test`
+   - Last Name: `User`
+   - Click "Save"
+   - Go to "Credentials" tab
+   - Set password: `password123`
+   - Turn off "Temporary"
+   - Click "Save"
 
-## 📡 API Endpoints
+### Step 3: Configure Backend
 
-### User Management
-```bash
-# Register user
-POST http://localhost:8081/api/users/register
-{
-  "name": "John Doe",
-  "email": "john@example.com",
-  "password": "password123"
-}
+1. **Update application.yml**:
+   ```yaml
+   keycloak:
+     realm: oauth-demo
+     auth-server-url: http://10.216.68.222:7000/realms/oauth-demo
+     client-id: Spring-Client
+     client-secret: YOUR_CLIENT_SECRET_HERE
+     redirect-uri: http://localhost:5173/callback
+   ```
 
-# Login user
-POST http://localhost:8081/api/users/login
-{
-  "email": "john@example.com",
-  "password": "password123"
-}
+2. **Start the Spring Boot backend**:
+   ```bash
+   cd /home/nkwentiseverian/projects/keycloak-lab-practice/oauth-lab/oauth
+   ./gradlew bootRun
+   ```
 
-# Get user by ID
-GET http://localhost:8081/api/users/1
+3. **Verify backend is running**:
+   ```bash
+   curl http://localhost:8081/oauth/health
+   ```
+   Should return: `OAuth Backend is running!`
 
-# Get user by email
-GET http://localhost:8081/api/users/email/john@example.com
-```
+### Step 4: Start Frontend
 
-### OAuth Flow
-```bash
-# Get authorization URL
-GET http://localhost:8081/oauth/authorize
+1. **Install dependencies**:
+   ```bash
+   cd /home/nkwentiseverian/projects/keycloak-lab-practice/oauth-lab/oauth-client
+   npm install
+   ```
 
-# Exchange code for tokens + user data
-POST http://localhost:8081/oauth/callback?code=AUTHORIZATION_CODE
+2. **Start the React app**:
+   ```bash
+   npm run dev
+   ```
 
-# Health check
-GET http://localhost:8081/oauth/health
-```
+3. **Access the application**:
+   - Open: `http://localhost:5173`
 
-## 🔄 OAuth Flow
-
-1. **User visits** http://localhost:5173
-2. **User clicks** "Continue with Keycloak"
-3. **Frontend calls** backend `/oauth/authorize`
-4. **Backend returns** Keycloak authorization URL
-5. **Frontend redirects** to Keycloak at `10.216.68.222:7000`
-6. **User authenticates** with Keycloak
-7. **Keycloak redirects** to frontend with authorization code
-8. **Frontend calls** backend `/oauth/callback` with code
-9. **Backend exchanges** code for tokens with Keycloak
-10. **Backend creates/updates** user in database
-11. **Backend returns** tokens + user data to frontend
-12. **Frontend shows** welcome screen with user name
-
-## 🛠️ Development
-
-### Backend Development (Local Machine)
-```bash
-cd oauth
-
-# Run with hot reload
-./gradlew bootRun
-
-# Build JAR
-./gradlew build
-
-# Run tests
-./gradlew test
-
-# Access H2 Console
-# http://localhost:8081/h2-console
-```
-
-### Frontend Development (Local Machine)
-```bash
-cd oauth-client
-
-# Install dependencies
-npm install
-
-# Start development server
-npm run dev
-
-# Build for production
-npm run build
-```
-
-### Keycloak Management (Multipass Instance)
-```bash
-# SSH into multipass
-ssh ubuntu@10.216.68.222
-
-# Check Keycloak logs
-docker-compose logs keycloak
-
-# Restart Keycloak
-docker-compose restart keycloak
-
-# Stop all services
-docker-compose down
-```
-
-## 🔍 Testing
+## 🧪 Testing the Application
 
 ### Test Local Authentication
-1. Visit http://localhost:5173
-2. Click "Register" tab
-3. Create an account with name, email, password
-4. Switch to "Login" tab
-5. Login with your credentials
-6. See welcome message: "Welcome, [Name]!"
 
-### Test OAuth Flow
-1. Visit http://localhost:5173
-2. Click "Continue with Keycloak"
-3. Login with Keycloak credentials
-4. See welcome message: "Welcome, OAuth User!"
+1. **Register a new account**:
+   - Click "Register" tab
+   - Fill in: Name, Email, Password
+   - Click "Create Account"
 
-## 🗄️ Database
+2. **Login with local account**:
+   - Click "Login" tab
+   - Enter email and password
+   - Click "Sign In"
 
-- **H2 In-Memory Database**: For development (runs locally)
-- **PostgreSQL**: For Keycloak (runs on multipass instance)
-- **JPA/Hibernate**: Object-relational mapping
-- **Auto-create tables**: On application startup
-- **H2 Console**: Available at http://localhost:8081/h2-console
+### Test Keycloak OAuth
 
-## 🌐 Network Configuration
+1. **Logout first** (if logged in):
+   - Click "Sign Out"
 
-### Docker Network (Multipass Instance)
-- **Network Name**: `oauth-network`
-- **Services**: Keycloak and PostgreSQL communicate via container names
-- **External Access**: Keycloak accessible at `10.216.68.222:7000`
+2. **Login with Keycloak**:
+   - Click "Continue with Keycloak"
+   - You'll be redirected to Keycloak login page
+   - Login with: `testuser` / `password123`
+   - You'll be redirected back with real user data
 
-### CORS Configuration
-- **Backend**: CORS enabled for all origins (`*`)
-- **Frontend**: Connects to `localhost:8081` for API calls
-- **Keycloak**: Accessible from any origin for OAuth flow
-
-## 🐛 Troubleshooting
+## 🔧 Troubleshooting
 
 ### Common Issues
-1. **CORS errors**: Backend has CORS enabled for all origins
-2. **Keycloak connection**: Ensure Keycloak is running on multipass at port 7000
-3. **Client secret**: Update the client secret in `application.yml`
-4. **Port conflicts**: Ensure ports 5173 and 8081 are available locally
-5. **Network connectivity**: Ensure multipass instance is accessible at `10.216.68.222`
 
-### Logs
-- **Backend logs**: Check console output from `./gradlew bootRun`
-- **Frontend logs**: Check browser console and terminal
-- **Keycloak logs**: SSH to multipass and run `docker-compose logs keycloak`
+#### 1. **401 Unauthorized Error**
+**Cause**: Client ID or secret mismatch
+**Solution**:
+- Verify client ID in Keycloak matches `application.yml`
+- Check client secret is correct
+- Ensure client is `confidential` type
 
-### Network Testing
+#### 2. **Database Connection Error**
+**Cause**: PostgreSQL not accessible
+**Solution**:
 ```bash
-# Test Keycloak connectivity
-curl http://10.216.68.222:7000
+# Check if PostgreSQL port is exposed
+telnet 10.216.68.222 5432
 
-# Test backend connectivity
-curl http://localhost:8081/oauth/health
-
-# Test frontend
-curl http://localhost:5173
+# Restart Docker containers
+docker-compose down && docker-compose up -d
 ```
 
-## 📝 Notes
+#### 3. **OAuth Button Not Working**
+**Cause**: User already logged in
+**Solution**:
+- Click "Sign Out" first
+- Clear browser cache
+- Try again
 
-- **Database**: H2 in-memory database (data lost on restart)
-- **Password security**: BCrypt encryption for local users
-- **Session storage**: User data stored in browser localStorage
-- **OAuth tokens**: Stored in localStorage (demo purposes)
-- **Production**: Implement proper security measures for production use
-- **Multipass**: Keycloak data persisted in `/home/ubuntu/demo-data` 
+#### 4. **Mock User Data Instead of Real Data**
+**Cause**: JWT decoding not working
+**Solution**:
+- Check backend logs for JWT errors
+- Verify Keycloak user has email and name
+- Restart backend after configuration changes
+
+### Debug Commands
+
+```bash
+# Test Keycloak connectivity
+curl -X GET "http://10.216.68.222:7000/realms/oauth-demo/.well-known/openid_configuration"
+
+# Test backend authorization URL
+curl -X GET "http://localhost:8081/oauth/authorize"
+
+# Check backend health
+curl -X GET "http://localhost:8081/oauth/health"
+
+# Test database connection
+telnet 10.216.68.222 5432
+```
+
+## 📁 Project Structure
+
+```
+oauth-lab/
+├── oauth/                          # Spring Boot Backend
+│   ├── src/main/java/com/demo/oauth/
+│   │   ├── controller/             # REST Controllers
+│   │   ├── model/                  # JPA Entities
+│   │   ├── repository/             # Data Access
+│   │   ├── service/                # Business Logic
+│   │   ├── config/                 # Security Config
+│   │   └── util/                   # JWT Utilities
+│   ├── src/main/resources/
+│   │   └── application.yml         # Configuration
+│   └── build.gradle               # Dependencies
+├── oauth-client/                   # React Frontend
+│   ├── src/
+│   │   ├── App.tsx                # Main Component
+│   │   ├── App.css                # Styles
+│   │   └── index.css              # Global Styles
+│   └── package.json               # Frontend Dependencies
+└── docker-compose.yml             # Keycloak + PostgreSQL
+```
+
+## 🔐 Security Features
+
+- **OAuth 2.0 Authorization Code Flow**
+- **JWT Token Decoding**
+- **BCrypt Password Hashing**
+- **CORS Configuration**
+- **Database User Persistence**
+
+## 📊 Database Schema
+
+### Users Table
+```sql
+CREATE TABLE users (
+    id BIGSERIAL PRIMARY KEY,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    password VARCHAR(255),           -- NULL for OAuth users
+    auth_provider VARCHAR(50),       -- 'local' or 'keycloak'
+    external_id VARCHAR(255),        -- Keycloak user ID
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+);
+```
+
+## 🚀 Deployment
+
+### Production Considerations
+
+1. **HTTPS**: Use HTTPS in production
+2. **Environment Variables**: Move secrets to environment variables
+3. **Database**: Use production PostgreSQL
+4. **Keycloak**: Configure proper SSL certificates
+5. **CORS**: Restrict origins to production domains
+
+### Environment Variables
+
+```bash
+# Backend
+SPRING_DATASOURCE_URL=jdbc:postgresql://host:port/db
+SPRING_DATASOURCE_USERNAME=user
+SPRING_DATASOURCE_PASSWORD=password
+KEYCLOAK_CLIENT_SECRET=your-secret
+
+# Frontend
+REACT_APP_API_URL=http://localhost:8081
+```
+
+## 📝 API Endpoints
+
+### Backend APIs
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/oauth/authorize` | GET | Get Keycloak authorization URL |
+| `/oauth/callback` | POST | Exchange code for tokens |
+| `/oauth/health` | GET | Health check |
+| `/api/users/register` | POST | Register local user |
+| `/api/users/login` | POST | Login local user |
+| `/api/users/{id}` | GET | Get user by ID |
+| `/api/users/email/{email}` | GET | Get user by email |
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
+
+## 📄 License
+
+This project is for educational purposes.
+
+## 🆘 Support
+
+If you encounter issues:
+
+1. Check the troubleshooting section above
+2. Verify all services are running
+3. Check backend logs for errors
+4. Ensure Keycloak configuration is correct
+5. Clear browser cache and try again
+
+---
+
+**Happy OAuth-ing! 🎉** 
