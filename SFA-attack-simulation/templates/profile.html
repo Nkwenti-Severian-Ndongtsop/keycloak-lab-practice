@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}Profile - Vulnerable Auth System{% endblock %}
+
+{% block content %}
+<h1>User Profile</h1>
+
+<div class="vulnerability-info">
+    <strong>🔒 SECURITY WARNING:</strong> This session is vulnerable to session fixation attacks.
+    An attacker could potentially hijack your session if they know your session ID.
+</div>
+
+<div style="background: #d1ecf1; border: 1px solid #bee5eb; color: #0c5460; padding: 15px; border-radius: 5px;">
+    <h3>Profile Information:</h3>
+    <p><strong>Username:</strong> {{ user }}</p>
+    <p><strong>Role:</strong> {{ role }}</p>
+    <p><strong>Session ID:</strong> <code>{{ session.get('_id', 'Not available') }}</code></p>
+    <p><strong>Login Time:</strong> {{ session.get('login_time', 'Not recorded') }}</p>
+</div>
+
+<div style="margin-top: 20px;">
+    <a href="{{ url_for('index') }}" class="btn">Back to Dashboard</a>
+</div>
+{% endblock %} 
