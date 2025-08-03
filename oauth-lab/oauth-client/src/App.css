@@ -256,6 +256,11 @@
   border: 1px solid #bbdefb;
 }
 
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
 .error {
   color: #ef4444;
   font-size: 14px;
