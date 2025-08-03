@@ -224,8 +224,9 @@ function App() {
     // Clear all OAuth state thoroughly
     clearOAuthState();
     
-    // Force a page reload to clear any cached OAuth state
-    window.location.reload();
+    // Redirect to Keycloak logout to clear OAuth session
+    const logoutUrl = `http://10.216.68.222:7000/realms/oauth-demo/protocol/openid-connect/logout?client_id=Spring-Client&post_logout_redirect_uri=${encodeURIComponent('http://localhost:5173')}`;
+    window.location.href = logoutUrl;
   };
 
   const clearMessages = () => {
