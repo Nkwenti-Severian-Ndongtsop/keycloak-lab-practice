@@ -1,0 +1,41 @@
+version: "3.8"
+
+services:
+  keycloak-db:
+    image: postgres:15
+    container_name: oauth-db
+    environment:
+      POSTGRES_DB: oauth-demo
+      POSTGRES_USER: nkwenti
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    volumes:
+      - /home/ubuntu/demo-data:/var/lib/postgresql/data
+    networks:
+      - oauth-network
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:latest
+    container_name: oauth-demo
+    command: start-dev
+    environment:
+      KEYCLOAK_ADMIN: nkwenti
+      KEYCLOAK_ADMIN_PASSWORD: password
+      KC_DB: postgres
+      KC_DB_URL_HOST: oauth-db
+      KC_DB_URL_PORT: 5432
+      KC_DB_URL_DATABASE: oauth-demo
+      KC_DB_USERNAME: nkwenti
+      KC_DB_PASSWORD: password
+      KC_HOSTNAME: 10.216.68.222
+    ports:
+      - "7000:8080"
+    depends_on:
+      - keycloak-db
+    networks:
+      - oauth-network
+
+networks:
+  oauth-network:
+    driver: bridge
