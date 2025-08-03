@@ -38,3 +38,4 @@ out/
 KEY*.md
 U*.md*
 t*.sh
+.application.yml
