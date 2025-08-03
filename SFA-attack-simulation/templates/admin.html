@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Panel - Vulnerable Auth System{% endblock %}
+
+{% block content %}
+<h1>Admin Panel</h1>
+
+<div class="vulnerability-info">
+    <strong>🚨 CRITICAL VULNERABILITY:</strong> This admin panel is accessible through session fixation.
+    If an attacker can predict or steal your session ID, they can access this sensitive area.
+</div>
+
+<div style="background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; padding: 15px; border-radius: 5px;">
+    <h3>🔐 Admin Access Granted</h3>
+    <p><strong>Welcome, {{ user }}!</strong> You have administrative privileges.</p>
+    <p><strong>Current Session ID:</strong> <code>{{ session.get('_id', 'Not available') }}</code></p>
+</div>
+
+<div style="margin-top: 20px; padding: 15px; background: #e9ecef; border-radius: 5px;">
+    <h3>Admin Functions:</h3>
+    <ul>
+        <li>User Management</li>
+        <li>System Configuration</li>
+        <li>Security Settings</li>
+        <li>Database Administration</li>
+    </ul>
+    <p><em>Note: These functions are simulated for demonstration purposes.</em></p>
+</div>
+
+<div style="margin-top: 20px;">
+    <a href="{{ url_for('index') }}" class="btn">Back to Dashboard</a>
+</div>
+{% endblock %} 
