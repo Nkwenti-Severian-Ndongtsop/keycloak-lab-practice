@@ -2,6 +2,7 @@ package com.demo.oauth.controller;
 
 import com.demo.oauth.model.User;
 import com.demo.oauth.service.UserService;
+import com.demo.oauth.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,6 +18,9 @@ public class UserController {
     
     @Autowired
     private UserService userService;
+    
+    @Autowired
+    private JwtUtil jwtUtil;
     
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@RequestBody Map<String, String> request) {
@@ -112,6 +116,56 @@ public class UserController {
             return ResponseEntity.ok(response);
         } else {
             return ResponseEntity.notFound().build();
+        }
+    }
+    
+    @GetMapping("/protected/profile")
+    public ResponseEntity<?> getProtectedProfile(@RequestHeader("Authorization") String authHeader) {
+        try {
+            // Extract token from Authorization header
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                return ResponseEntity.status(401).body(Map.of("error", "Missing or invalid Authorization header"));
+            }
+            
+            String token = authHeader.substring(7);
+            
+            // Validate and decode the JWT token
+            Map<String, Object> tokenClaims = jwtUtil.validateAndDecodeToken(token);
+            
+            // Extract user information from the validated token
+            String email = jwtUtil.extractEmail(tokenClaims);
+            String name = jwtUtil.extractName(tokenClaims);
+            String sub = jwtUtil.extractSub(tokenClaims);
+            String expirationInfo = jwtUtil.getTokenExpirationInfo(tokenClaims);
+            
+            // Create protected profile response
+            Map<String, Object> profile = new HashMap<>();
+            profile.put("message", "Access granted to protected resource!");
+            profile.put("timestamp", System.currentTimeMillis());
+            profile.put("token_validation", "VALID");
+            profile.put("token_expiration", expirationInfo);
+            profile.put("user_info", Map.of(
+                "name", name != null ? name : "Unknown",
+                "email", email != null ? email : "Unknown",
+                "subject_id", sub != null ? sub : "Unknown"
+            ));
+            profile.put("token_claims", Map.of(
+                "issuer", tokenClaims.get("iss"),
+                "audience", tokenClaims.get("aud"),
+                "issued_at", tokenClaims.get("iat"),
+                "expires_at", tokenClaims.get("exp"),
+                "token_type", tokenClaims.get("typ")
+            ));
+            profile.put("status", "authenticated");
+            
+            return ResponseEntity.ok(profile);
+            
+        } catch (Exception e) {
+            return ResponseEntity.status(401).body(Map.of(
+                "error", "Token validation failed",
+                "details", e.getMessage(),
+                "status", "unauthorized"
+            ));
         }
     }
 } 
