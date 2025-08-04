@@ -39,5 +39,5 @@ KEY*.md
 U*.md*
 t*.sh
 .env*
-.application.yml
+application.yml
 COM*.md
