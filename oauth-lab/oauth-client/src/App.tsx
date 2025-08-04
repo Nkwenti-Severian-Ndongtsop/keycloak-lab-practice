@@ -62,6 +62,7 @@ function App() {
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const code = urlParams.get('code');
+    const state = urlParams.get('state');
     const error = urlParams.get('error');
     
     // Handle OAuth callback first (before checking saved user)
@@ -77,9 +78,9 @@ function App() {
       if (code) {
         // Set OAuth processing state immediately to prevent flash
         setIsOAuthProcessing(true);
-        // Process the code
+        // Process the code with state parameter
         setTimeout(() => {
-          exchangeCodeForToken(code);
+          exchangeCodeForToken(code, state);
         }, 100);
         return; // Don't check saved user if processing OAuth
       }
@@ -186,12 +187,17 @@ function App() {
     }
   };
 
-  const exchangeCodeForToken = async (code: string) => {
+  const exchangeCodeForToken = async (code: string, state: string | null) => {
     setIsLoading(true);
     setError('');
 
     try {
-      const response = await fetch(`${buildApiUrl(ENDPOINTS.OAUTH_CALLBACK)}?code=${code}`, {
+      const params = new URLSearchParams({ code });
+      if (state) {
+        params.append('state', state);
+      }
+      
+      const response = await fetch(`${buildApiUrl(ENDPOINTS.OAUTH_CALLBACK)}?${params.toString()}`, {
         method: 'POST'
       });
 

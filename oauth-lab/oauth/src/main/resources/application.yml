@@ -3,7 +3,7 @@ server:
 
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/<REALM>
+    url: jdbc:postgresql://10.216.68.222:5432/oauth-demo
     driver-class-name: org.postgresql.Driver
     username: nkwenti
     password: password
@@ -17,8 +17,8 @@ spring:
         format_sql: true
 
 keycloak:
-  realm: ""
-  auth-server-url: http://localhost:7000/realms/<REALM>
+  realm: oauth-demo
+  auth-server-url: http://10.216.68.222:7000/realms/oauth-demo
   client-id: Spring-Client
-  client-secret: ""
+  client-secret: EdBAUx47IccjgWjtV8HxhrmKjq3s9bQ9
   redirect-uri: http://localhost:5173/callback 
