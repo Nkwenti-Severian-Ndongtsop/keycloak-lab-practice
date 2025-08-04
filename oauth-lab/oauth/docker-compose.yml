@@ -31,6 +31,8 @@ services:
       KC_HOSTNAME: 10.216.68.222
     ports:
       - "7000:8080"
+    volumes:
+      - ./adorsys-tm-01:/opt/keycloak/themes/adorsys-tm-01
     depends_on:
       - keycloak-db
     networks:

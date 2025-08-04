@@ -20,5 +20,5 @@ keycloak:
   realm: oauth-demo
   auth-server-url: http://10.216.68.222:7000/realms/oauth-demo
   client-id: Spring-Client
-  client-secret: EdBAUx47IccjgWjtV8HxhrmKjq3s9bQ9
+  client-secret: dMXAhibrhlOGXwxcDXZMxhwyDacaYkGG
   redirect-uri: http://localhost:5173/callback 
