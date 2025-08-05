@@ -89,4 +89,4 @@ if __name__ == '__main__':
     print("   - HttpOnly cookies enabled")
     print("   - SameSite protection enabled")
     print("   - Session timeout: 30 minutes")
-    app.run(debug=True, host='0.0.0.0', port=5001)  # Different port to avoid conflicts 
+    app.run(debug=True, host='0.0.0.0', port=5001)
