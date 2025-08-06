@@ -13,7 +13,6 @@
 <div style="background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; padding: 15px; border-radius: 5px;">
     <h3>🔐 Admin Access Granted</h3>
     <p><strong>Welcome, {{ user }}!</strong> You have administrative privileges.</p>
-    <p><strong>Current Session ID:</strong> <code>{{ session.get('_id', 'Not available') }}</code></p>
 </div>
 
 <div style="margin-top: 20px; padding: 15px; background: #e9ecef; border-radius: 5px;">
@@ -28,6 +27,154 @@
 </div>
 
 <div style="margin-top: 20px;">
+    <button onclick="displayUsers()" class="btn" style="background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">View All Users</button>
+</div>
+
+<div id="users-container" style="margin-top: 20px; display: none;">
+    <h3>Platform Users (10 Total)</h3>
+    <div id="users-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px; margin-top: 15px;">
+        <!-- Users will be populated here -->
+    </div>
+</div>
+
+<div style="margin-top: 20px;">
     <a href="{{ url_for('index') }}" class="btn">Back to Dashboard</a>
 </div>
-{% endblock %} 
+
+<script>
+// Mock user data
+const users = [
+    {
+        id: 1,
+        username: "john_doe",
+        email: "john.doe@example.com",
+        fullName: "John Doe",
+        role: "Admin",
+        joinDate: "2024-01-15",
+        lastLogin: "2024-08-05",
+        status: "Active"
+    },
+    {
+        id: 2,
+        username: "jane_smith",
+        email: "jane.smith@example.com",
+        fullName: "Jane Smith",
+        role: "User",
+        joinDate: "2024-02-20",
+        lastLogin: "2024-08-04",
+        status: "Active"
+    },
+    {
+        id: 3,
+        username: "mike_wilson",
+        email: "mike.wilson@example.com",
+        fullName: "Mike Wilson",
+        role: "User",
+        joinDate: "2024-03-10",
+        lastLogin: "2024-08-03",
+        status: "Active"
+    },
+    {
+        id: 4,
+        username: "sarah_jones",
+        email: "sarah.jones@example.com",
+        fullName: "Sarah Jones",
+        role: "Moderator",
+        joinDate: "2024-03-25",
+        lastLogin: "2024-08-05",
+        status: "Active"
+    },
+    {
+        id: 5,
+        username: "david_brown",
+        email: "david.brown@example.com",
+        fullName: "David Brown",
+        role: "User",
+        joinDate: "2024-04-05",
+        lastLogin: "2024-08-01",
+        status: "Inactive"
+    },
+    {
+        id: 6,
+        username: "emma_davis",
+        email: "emma.davis@example.com",
+        fullName: "Emma Davis",
+        role: "User",
+        joinDate: "2024-04-15",
+        lastLogin: "2024-08-05",
+        status: "Active"
+    },
+    {
+        id: 7,
+        username: "alex_miller",
+        email: "alex.miller@example.com",
+        fullName: "Alex Miller",
+        role: "User",
+        joinDate: "2024-05-01",
+        lastLogin: "2024-08-04",
+        status: "Active"
+    },
+    {
+        id: 8,
+        username: "lisa_taylor",
+        email: "lisa.taylor@example.com",
+        fullName: "Lisa Taylor",
+        role: "User",
+        joinDate: "2024-05-20",
+        lastLogin: "2024-07-30",
+        status: "Active"
+    },
+    {
+        id: 9,
+        username: "chris_anderson",
+        email: "chris.anderson@example.com",
+        fullName: "Chris Anderson",
+        role: "User",
+        joinDate: "2024-06-10",
+        lastLogin: "2024-08-05",
+        status: "Active"
+    },
+    {
+        id: 10,
+        username: "natalie_white",
+        email: "natalie.white@example.com",
+        fullName: "Natalie White",
+        role: "User",
+        joinDate: "2024-06-25",
+        lastLogin: "2024-08-03",
+        status: "Active"
+    }
+];
+
+function displayUsers() {
+    const container = document.getElementById('users-container');
+    const usersList = document.getElementById('users-list');
+    
+    // Clear existing content
+    usersList.innerHTML = '';
+    
+    // Display the container
+    container.style.display = 'block';
+    
+    // Create user cards
+    users.forEach(user => {
+        const userCard = document.createElement('div');
+        userCard.style.cssText = 'border: 1px solid #ddd; border-radius: 8px; padding: 15px; background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.1);';
+        
+        userCard.innerHTML = `
+            <h4 style="margin: 0 0 10px 0; color: #333;">${user.fullName}</h4>
+            <p style="margin: 5px 0; font-size: 14px;"><strong>Username:</strong> ${user.username}</p>
+            <p style="margin: 5px 0; font-size: 14px;"><strong>Email:</strong> ${user.email}</p>
+            <p style="margin: 5px 0; font-size: 14px;"><strong>Role:</strong> ${user.role}</p>
+            <p style="margin: 5px 0; font-size: 14px;"><strong>Status:</strong> 
+                <span style="color: ${user.status === 'Active' ? 'green' : 'red'}; font-weight: bold;">${user.status}</span>
+            </p>
+            <p style="margin: 5px 0; font-size: 12px; color: #666;"><strong>Joined:</strong> ${user.joinDate}</p>
+            <p style="margin: 5px 0; font-size: 12px; color: #666;"><strong>Last Login:</strong> ${user.lastLogin}</p>
+        `;
+        
+        usersList.appendChild(userCard);
+    });
+}
+</script>
+{% endblock %}
