@@ -9,12 +9,15 @@ The **Keycloak Config CLI** is a powerful tool that lets you automate and manage
 ### ✅ Option 1: Run via Docker (Recommended)
 
 ```bash
-docker run --rm \
-  -e KEYCLOAK_URL=http://localhost:8080 \
-  -e KEYCLOAK_USER=admin \
-  -e KEYCLOAK_PASSWORD=admin \
-  -v $(pwd)/config:/config \
-  adorsys/keycloak-config-cli:latest
+docker run \
+    -e KEYCLOAK_URL="http://<your keycloak host>:8080/" \
+    -e KEYCLOAK_USER="<keycloak admin username>" \
+    -e KEYCLOAK_PASSWORD="<keycloak admin password>" \
+    -e KEYCLOAK_AVAILABILITYCHECK_ENABLED=true \
+    -e KEYCLOAK_AVAILABILITYCHECK_TIMEOUT=120s \
+    -e IMPORT_FILES_LOCATIONS='/config/*' \
+    -v <your config path>:/config \
+    adorsys/keycloak-config-cli:latest
 ```
 - Replace:
     - `http://localhost:8080` → your Keycloak instance URL
@@ -67,25 +70,36 @@ Here are the key env vars you can set when using Docker:
 
 <br/>
 
-## 🚀 Example Use Case
-
-**File structure:**
-
-
-```bash
-config/
-└── my-app/
-    ├── realm.json
-    ├── clients/
-    │   └── frontend.json
-    └── users/
-        └── admin.json
-```
-
-
 ## ✅ Advantages
 
 - Declarative configuration
 - Repeatable deployments (ideal for CI/CD)
 - Version control with Git
 - Zero manual UI setup
+
+## 🚀 Example Use Case
+
+<br/>
+
+```bash
+docker run \
+    -e KEYCLOAK_URL="http://localhost:7000" \            
+    -e KEYCLOAK_USER="nkwenti" \                  
+    -e KEYCLOAK_PASSWORD="password" \                 
+    -e KEYCLOAK_AVAILABILITYCHECK_ENABLED=true \
+    -e KEYCLOAK_AVAILABILITYCHECK_TIMEOUT=120s \
+    -e IMPORT_FILES_LOCATIONS='/config/*' \
+    -v "$(pwd)/keycloak-config/realm-config.json:/config/realm-config.json" \        
+    adorsys/keycloak-config-cli:latest
+```
+
+
+**File structure:**
+
+
+```bash
+keycloak-config/
+  └── realm-config.json
+```
+
+
